@@ -1,4 +1,5 @@
 const express = require('express');
+const Joi = require('joi');
 
 const app = express();
 
@@ -39,6 +40,18 @@ app.get('/users/:id', (req, res)=> {
 })
 
 app.post('/users', (req, res)=> {
+    const schema = Joi.object({
+        name: Joi.string().min(3).required()
+    });
+
+    try {
+        const value = schema.validate(req.body);
+    }
+    catch (err) { 
+        return res.status(400).send("not valid requset");
+    }
+
+  
     const user = {
         id: users.length+1,
         nameofuser: req.body.name
