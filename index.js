@@ -44,13 +44,8 @@ app.post('/users', (req, res)=> {
         name: Joi.string().min(3).required()
     });
 
-    try {
-        const value = schema.validate(req.body);
-    }
-    catch (err) { 
-        return res.status(400).send("not valid requset");
-    }
-
+    const { error } = schema.validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
   
     const user = {
         id: users.length+1,
@@ -60,6 +55,32 @@ app.post('/users', (req, res)=> {
     users.push(user);
     res.send(user);
 });
+
+app.put('/users/:id',(req, res)=>{
+    const user = users.find(c=>c.id === parseInt(req.params.id));
+
+    if(!user) return res.status(404).send('The user with the given Id was not eixist');
+
+    const schema = Joi.object({
+        name: Joi.string().min(3).required()
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    user.nameofuser = req.body.name;
+
+    res.send(user);
+});
+
+app.delete('/users/:id', (req, res)=>{
+    const user = users.find(c=>c.id === parseInt(req.params.id));
+
+    if(!user) return res.status(404).send('The user with the given Id was not eixist');
+
+    const index  = users.indexOf(user);
+    users.splice(index, 1);
+})
 
 const port = process.env.PORT||3000;
 
