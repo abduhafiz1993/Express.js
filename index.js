@@ -2,6 +2,8 @@ const express = require('express');
 
 const app = express();
 
+app.use(express.json());
+
 const users = [{
     id: 1,
     nameofuser: "Abdu" 
@@ -37,7 +39,13 @@ app.get('/users/:id', (req, res)=> {
 })
 
 app.post('/users', (req, res)=> {
-    
+    const user = {
+        id: users.length+1,
+        nameofuser: req.body.name
+    }
+
+    users.push(user);
+    res.send(user);
 });
 const port = process.env.PORT||3000;
 
