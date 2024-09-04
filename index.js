@@ -33,43 +33,60 @@ app.post('/users', async (req, res)=> {
 
 
 
-app.get('/users', (req, res)=> {
-    res.send(users);
+app.get('/users', async (req, res)=> {
+    try {
+        const users = await prisma.user.findMany();
+        res.status(200).json(users);
+    } catch (err) {
+        res.status(500).json({ error:err.message })
+    }
+
 })
 
-app.get('/users/:id', (req, res)=> {
-    const user = users.find(c=>c.id === parseInt(req.params.id));
-
-    if(!user) return res.status(404).send('The user with the given Id was not eixist')
+app.get('/users/:id', async (req, res)=> {
+    try {
+        const user = await prisma.user.findUnique(
+            {
+                where:{id: parseInt(req.params.id)},
+            }
+        );
+        if(!user) return res.status(404).send('The user with the given Id was not eixist')
     
-    res.send(user);
-})
-app.put('/users/:id',(req, res)=>{
-    const user = users.find(c=>c.id === parseInt(req.params.id));
-
-    if(!user) return res.status(404).send('The user with the given Id was not eixist');
-
-    const schema = Joi.object({
-        name: Joi.string().min(3).required()
-    });
-
-    const { error } = schema.validate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-
-    user.nameofuser = req.body.name;
-
-    res.send(user);
+            res.status(200).json(user);
+    } catch (err) {
+        res.status(500).json({error:err.message});
+    }
 });
 
-app.delete('/users/:id', (req, res)=>{
-    const user = users.find(c=>c.id === parseInt(req.params.id));
+app.put('/users/:id', async (req, res)=>{
 
-    if(!user) return res.status(404).send('The user with the given Id was not eixist');
+    try {
+        const {error, value} = userSchema.validate(req.body);
+        if(error) return res.status(400).send(error.details[0].message);
 
-    const index  = users.indexOf(user);
-    users.splice(index, 1);
+        const user = await prisma.user.update(
+            {
+                where:{id: parseInt(req.params.id)},
+                data: value,
+            }
+        );
+        res.status(200).json(user);
+    } catch (err) {
+        res.status(500).json({error:err.message});        
+    }
+});
 
-    res.send(users);
+app.delete('/users/:id', async (req, res)=>{
+  try {
+    await prisma.user.delete({
+        where:{
+            id: parseInt(req.params.id)
+        },
+    });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({error:err.message});    
+  }  
 })
 
 const port = process.env.PORT||3000;
